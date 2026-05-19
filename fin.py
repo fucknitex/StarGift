@@ -124,7 +124,7 @@ def db_init():
             gift_id     INTEGER NOT NULL,
             gift_name   TEXT NOT NULL,
             gift_emoji  TEXT NOT NULL,
-            gift_price  INTEGER NOT NULL,
+            gift_price  INTEGER NOT NULL DEFAULT 0,
             obtained_at TEXT DEFAULT (datetime('now'))
         );
         CREATE INDEX IF NOT EXISTS idx_checks_code ON checks(code);
@@ -153,26 +153,26 @@ def _seed_gifts(conn):
     if db_scalar(conn, "SELECT COUNT(*) FROM gifts") > 0:
         return
     gifts = [
-        (1,  "мишка",                "🧸",   12,  "regular", "dark",  "5170233102089322756"),
-        (2,  "сердце",               "💝",   12,  "regular", "dark",  "5170145012310081615"),
-        (3,  "подарок",              "🎁",   25,  "regular", "dark",  "5170250947678437525"),
-        (4,  "роза",                 "🌹",   25,  "regular", "dark",  "5168103777563050263"),
-        (5,  "торт",                 "🎂",   50,  "regular", "dark",  "5170144170496491616"),
-        (6,  "букет",                "💐",   50,  "regular", "dark",  "5170314324215857265"),
-        (7,  "ракета",               "🚀",   50,  "regular", "dark",  "5170564780938756245"),
-        (8,  "бутылка",              "🍾",   50,  "regular", "dark",  "6028601630662853006"),
-        (9,  "алмаз",                "💎",   100, "regular", "dark",  "5168043875654172773"),
-        (10, "кольцо",               "💍",   100, "regular", "dark",  "5170690322832818290"),
-        (11, "кубок",                "🏆",   100, "regular", "dark",  "5170521118301225164"),
-        (12, "ёлка",                 "🎄",   55,  "special", "red",   None),
-        (13, "мишка 14 февраля",     "🐻",   55,  "special", "blue",  None),
-        (14, "сердце 14 февраля",    "💌",   55,  "special", "blue",  None),
-        (15, "Новогодний мишка",     "🎅🧸", 55,  "special", "red",   None),
-        (16, "мишка 8 марта",        "🌸🧸", 55,  "special", "red",   None),
-        (17, "Лепрекон мишка",       "🍀🧸", 55,  "special", "green", None),
-        (18, "Клоун медведь",        "🤡🧸", 55,  "special", "green", None),
-        (19, "Кролик мишка",         "🐰🧸", 55,  "special", "green", None),
-        (20, "Первомайский мишка",   "🌷🧸", 55,  "special", "green", None),
+        (1,  "сердце",              "❤️",   15,  "regular", "dark",  "5170145012310081615"),
+        (2,  "мишка",               "🧸",   15,  "regular", "dark",  "5170233102089322756"),
+        (3,  "подарок",             "🎁",   25,  "regular", "dark",  "5170250947678437525"),
+        (4,  "роза",                "🌹",   25,  "regular", "dark",  "5168103777563050263"),
+        (5,  "торт",                "🎂",   50,  "regular", "dark",  "5170144170496491616"),
+        (6,  "букет",               "💐",   50,  "regular", "dark",  "5170314324215857265"),
+        (7,  "ракета",              "🚀",   50,  "regular", "dark",  "5170564780938756245"),
+        (8,  "бутылка",             "🍾",   50,  "regular", "dark",  "6028601630662853006"),
+        (9,  "алмаз",               "⭐",   100, "regular", "dark",  "5168043875654172773"),
+        (10, "кольцо",              "💍",   100, "regular", "dark",  "5170690322832818290"),
+        (11, "кубок",               "⭐",   100, "regular", "dark",  "5170521118301225164"),
+        (12, "Новогодний мишка",    "🎅🧸", 55,  "special", "red",   "5956217000635139069"),
+        (13, "Ёлка",                "🎄",   55,  "special", "green", "5922558454332916696"),
+        (14, "14 февраля мишка",    "🐻",   55,  "special", "pink",  "5800655655995968830"),
+        (15, "14 февраля сердце",   "💌",   55,  "special", "pink",  "5801108895304779062"),
+        (16, "8 марта медведь",     "🌸🧸", 55,  "special", "pink",  "5866352046986232958"),
+        (17, "Лепрекон медведь",    "🍀🧸", 55,  "special", "green", "5893356958802511476"),
+        (18, "Клоун медведь",       "🤡🧸", 55,  "special", "multi", "5935895822435615975"),
+        (19, "Кролик медведь",      "🐰🧸", 55,  "special", "white", "5969796561943660080"),
+        (20, "1 мая медведь",       "🌷🧸", 55,  "special", "green", "6026193266406327981"),
     ]
     for g in gifts:
         conn.execute(
@@ -217,7 +217,7 @@ def _seed_cases(conn):
         ("Гарант", "🎯🧸", 35, "Гарантированный выигрыш! 90% мишка, 10% редкий удалённый медведь!", 0.1)
     )
     garant_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-    conn.execute("INSERT INTO case_items (case_id,gift_id,weight) VALUES (?,?,?)", (garant_id, 1, 90))
+    conn.execute("INSERT INTO case_items (case_id,gift_id,weight) VALUES (?,?,?)", (garant_id, 2, 90))
     for sp in specials:
         conn.execute("INSERT INTO case_items (case_id,gift_id,weight) VALUES (?,?,?)", (garant_id, sp["id"], 2))
     
@@ -243,6 +243,8 @@ def _seed_cases(conn):
 
 
 def add_to_inventory(uid, gift_id, gift_name, gift_emoji, gift_price):
+    if gift_price is None:
+        gift_price = 0
     conn = db_connect()
     conn.execute(
         "INSERT INTO user_inventory (user_id, gift_id, gift_name, gift_emoji, gift_price) VALUES (?,?,?,?,?)",
@@ -528,41 +530,65 @@ def spin_case(uid, case_id, chat_id, payment_method="balance"):
         conn.execute("UPDATE users SET balance=balance-? WHERE user_id=?", (case["price_stars"], uid))
         conn.commit()
         add_transaction(uid, "case_open", -case["price_stars"], f"Кейс: {case['name']}")
+    
     items = conn.execute(
-        "SELECT ci.weight,ci.gift_id,g.name,g.emoji,g.category,g.price_stars FROM case_items ci "
-        "LEFT JOIN gifts g ON g.id=ci.gift_id WHERE ci.case_id=?", (case_id,)
+        "SELECT ci.weight, ci.gift_id, g.name, g.emoji, g.category, g.price_stars FROM case_items ci "
+        "LEFT JOIN gifts g ON g.id = ci.gift_id WHERE ci.case_id = ?", (case_id,)
     ).fetchall()
     conn.close()
+    
     if not items:
+        send(chat_id, "❌ Ошибка: кейс пуст")
         return
-    item_list = [dict(i) for i in items]
-    won = weighted_choice(item_list, [i["weight"] for i in item_list])
+    
+    item_list = []
+    weights = []
+    for item in items:
+        item_dict = dict(item)
+        if item_dict.get("price_stars") is None:
+            item_dict["price_stars"] = 0
+        item_list.append(item_dict)
+        weights.append(item_dict["weight"])
+    
+    won = weighted_choice(item_list, weights)
+    
     reel = [random.choice(item_list) for _ in range(8)]
     reel[5] = won
+    
     msg = send(chat_id, "🎰 Прокрутка...")
     msg_id = msg.get("result", {}).get("message_id")
     if not msg_id:
         return
 
     def label(it):
-        return "💨 Ничего" if it.get("gift_id") is None else f"{it['emoji']} {it['name']}"
+        if it.get("gift_id") is None:
+            return "💨 Ничего"
+        return f"{it['emoji']} {it['name']}"
 
     for i in range(1, 9):
-        frame = "🎰 <b>Прокрутка...</b>\n\n" + "\n".join(f"  {label(f)}" for f in reel[:i][-4:]) + "\n\n⏳ " + "▓" * i + "░" * (8 - i)
+        display_items = reel[:i]
+        if len(display_items) > 4:
+            display_items = display_items[-4:]
+        frame = "🎰 <b>Прокрутка...</b>\n\n" + "\n".join(f"  {label(f)}" for f in display_items) + "\n\n⏳ " + "▓" * i + "░" * (8 - i)
         edit_msg(chat_id, msg_id, frame)
-        time.sleep(0.4)
+        time.sleep(0.3)
 
     if won.get("gift_id") is None:
         result_text = "🎰 <b>Результат!</b>\n\n💨 <b>Ничего</b>"
+        edit_msg(chat_id, msg_id, result_text, inline([
+            [(f"🎰 Ещё ({case['price_stars']}⭐)", f"open_case_{case_id}")],
+            [("◀️ В меню", "main_menu")],
+        ]))
     else:
-        result_text = f"🎰 <b>Результат!</b>\n\n🎉 {won['emoji']} {won['name']}\n💰 Цена: {won['price_stars']}⭐"
+        gift_price = won.get("price_stars") or 0
+        result_text = f"🎰 <b>Результат!</b>\n\n🎉 {won['emoji']} {won['name']}\n💰 Цена: {gift_price}⭐"
         add_prize(uid)
-        add_to_inventory(uid, won["gift_id"], won["name"], won["emoji"], won["price_stars"])
-
-    edit_msg(chat_id, msg_id, result_text, inline([
-        [(f"🎰 Ещё ({case['price_stars']}⭐)", f"open_case_{case_id}")],
-        [("◀️ В меню", "main_menu")],
-    ]))
+        add_to_inventory(uid, won["gift_id"], won["name"], won["emoji"], gift_price)
+        edit_msg(chat_id, msg_id, result_text, inline([
+            [(f"🎰 Ещё ({case['price_stars']}⭐)", f"open_case_{case_id}")],
+            [("🎒 Инвентарь", "inventory")],
+            [("◀️ В меню", "main_menu")],
+        ]))
 
 
 def purchase_gift_balance(chat_id, uid, gift_id):
