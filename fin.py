@@ -3,7 +3,7 @@ import os, json, time, random, sqlite3, logging, requests, threading
 from datetime import datetime
 from threading import Lock
 
-BOT_TOKEN = "8426205197:AAE7LoNhVNA5WqYv3-m3lTTse9WlWcscf2s"
+BOT_TOKEN = "8426205197:AAFnr2V2yAERSgU_ho-xMMIit9vOQuEUi3Y"
 BOT_USERNAME = "IsayGiftBot"
 ADMIN_USERNAME = "wyebu"
 REFERRAL_REWARD_STEP = 25
